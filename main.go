@@ -30,6 +30,7 @@ var (
 	mc56Mixers []Mixer
 	mc36Mixers []Mixer
 	mc96Mixers []Mixer
+	nepLogo string
 	)
 
 func vBoxImport(file string) {
@@ -166,7 +167,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 1"))
+		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 0"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -178,7 +179,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 1"))
+		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 0"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -190,7 +191,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 1"))
+		_, err = f.Write([]byte("\n add_gui_host " + `"` + mixer.Name + `"` + ` "` + mixer.Main + `"` + ` "` + mixer.Backup + `"` + " 0"))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -228,5 +229,18 @@ func main() {
 		createUserShareFolders(mixer)
 	}
 	bootstrapMxGUIVMS()
-	log.Print("All done! :^)")
+	nepLogo = ` *//*//.                                                            
+       ,,,,,//*/*/**%%%%%                                                       
+    .,,,,,,, ///*/*%%%%%%%%%                                                    
+   //,.,,,,,,*//**%%%%%%% %%%%                                                  
+ *////// ,,,, //,%%%% %%%%%%%%%                                                 
+ /////////.,,,/.#..#%%%%%%%%%%%%                                                
+//(*   /*////                                                                   
+ //////////////  ( @@@@@.    @@@   @@@@@@@@@@@  @@@@@@@@@@@                     
+ //////// .(((( #( @@@,@@@   @@@                @@@&     @@@                    
+  / ,(((((((( ###( @@@  @@@  @@@   @@@@@@@@@@   @@@&    @@@@                    
+   ,(((((((*%####( @@@   @@@ @@@                @@@@@@@@@@                      
+      (((( ######( @@@    @@@@@@                @@@&                            
+         .#######( @@@     @@@@@   @@@@@@@@@@   @@@&     `
+	log.Print(nepLogo)
 }
