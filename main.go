@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/terra-farm/go-virtualbox"
-	"gopkg.in/yaml.v2"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -10,14 +9,19 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/secsy/goftp"
+	"github.com/terra-farm/go-virtualbox"
+	"gopkg.in/yaml.v2"
 )
 
 type Mixer struct {
-	Main string `yaml:"main"`
+	Main   string `yaml:"main"`
 	Backup string `yaml:"backup"`
-	Type string `yaml:"type"`
-	Name string `yaml:"name"`
+	Type   string `yaml:"type"`
+	Name   string `yaml:"name"`
 }
 
 type Config struct {
@@ -25,19 +29,22 @@ type Config struct {
 }
 
 var (
-	mixers Config
+	mixers     Config
 	liveMixers []Mixer
 	mc56Mixers []Mixer
 	mc36Mixers []Mixer
 	mc96Mixers []Mixer
-	nepLogo string
-	)
+	nepLogo    string
+	wg         = &sync.WaitGroup{}
+)
 
 func vBoxImport(file string) {
 	_ = virtualbox.ImportOV(file)
 }
 
 func testConnection(mixer Mixer) {
+	wg.Add(1)
+	defer wg.Done()
 	log.Print("Testing connectivity to " + mixer.Name + " at " + mixer.Main)
 	portNum := "80"
 	seconds := 1
@@ -47,8 +54,61 @@ func testConnection(mixer Mixer) {
 		log.Println(err)
 		return
 	}
-	liveMixers = append(liveMixers,mixer)
-	//fmt.Printf("%+v",liveMixers)
+	liveMixers = append(liveMixers, mixer)
+	for _, mixer := range liveMixers {
+		backupFiles(mixer)
+	}
+	//fmt.Printf("%+v", liveMixers)
+}
+
+func backupFiles(mixer Mixer) {
+	config := goftp.Config{
+		User:               "root",
+		Password:           "hong",
+		ConnectionsPerHost: 10,
+		Timeout:            10 * time.Second,
+		Logger:             os.Stderr,
+	}
+
+	log.Print("Backing up " + mixer.Name + "...")
+	client, err := goftp.DialConfig(config, mixer.Main)
+	if err != nil {
+		panic(err)
+	}
+
+	files, err := client.ReadDir("/data/productions")
+	for _, file := range files {
+
+		fmt.Println("Downloading " + file.Name() + "...")
+
+		targetDir := "./mxgui_user_share/" + mixer.Name + "/productions/"
+		_, err := os.Stat(targetDir)
+		if os.IsNotExist(err) {
+			errDir := os.MkdirAll(targetDir, 0755)
+			if errDir != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if file.Name() != ".backup" {
+			newFile, err := os.Create(targetDir + file.Name() + ".lpn")
+			if err != nil {
+				panic(err)
+			}
+
+			log.Print("creating " + file.Name())
+
+			err = client.Retrieve("/data/productions/"+file.Name(), newFile)
+			if err != nil {
+				panic(err)
+			}
+
+			// os.Rename("./mxgui_user_share/"+mixer.Name+"/productions/"+file.Name(), "./mxgui_user_share/"+mixer.Name+"/productions/test"+".lpn")
+
+		}
+
+	}
+
 }
 
 func bootstrapMxGUIVMS() {
@@ -65,34 +125,32 @@ func bootstrapMxGUIVMS() {
 
 	for _, file := range files {
 		if file.Mode().IsRegular() {
-			if filepath.Ext(file.Name()) ==".ova" {
+			if filepath.Ext(file.Name()) == ".ova" {
 				vBoxImport(file.Name())
 				fileName := strings.Split(file.Name(), ".")
 				createConfigShareFolders(fileName[0])
 				command := "VBoxmanage.exe"
 				wd, err := os.Getwd()
-				configShareArgs := []string{"sharedfolder", "add", fileName[0], "--name", "mxgui_config_share", "--hostpath", wd+"\\configShares\\" + fileName[0] +"\\mxgui_config_share"}
-				userShareArgs := []string{"sharedfolder", "add", fileName[0], "--name", "mxgui_user_share", "--hostpath", wd+"\\mxgui_user_share\\"}
+				configShareArgs := []string{"sharedfolder", "add", fileName[0], "--name", "mxgui_config_share", "--hostpath", wd + "\\configShares\\" + fileName[0] + "\\mxgui_config_share"}
+				userShareArgs := []string{"sharedfolder", "add", fileName[0], "--name", "mxgui_user_share", "--hostpath", wd + "\\mxgui_user_share\\"}
 				log.Println(configShareArgs)
 				configShareCMD := exec.Command(command, configShareArgs...)
 				log.Print("Mounting config share folder...")
 				userShareCMD := exec.Command(command, userShareArgs...)
 				log.Print("Mounting user share folder...")
 				err = configShareCMD.Run()
-				if err !=nil {
+				if err != nil {
 					log.Fatalf("cmd.Run() failed with %s\n", err)
 				}
 				err = userShareCMD.Run()
-				if err !=nil {
+				if err != nil {
 					log.Fatalf("cmd.Run() failed with %s\n", err)
 				}
 				archiveOVA(file.Name())
-				}
 			}
 		}
 	}
-
-
+}
 
 func createUserShareFolders(mixer Mixer) {
 	dir := "./mxgui_user_share/" + mixer.Name
@@ -106,8 +164,8 @@ func createUserShareFolders(mixer Mixer) {
 	log.Print("Created User Share folder for " + mixer.Name)
 }
 
-func archiveOVA(fileName string){
-	dir :="./mxguiAppliancesArchive/"
+func archiveOVA(fileName string) {
+	dir := "./mxguiAppliancesArchive/"
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		errDir := os.MkdirAll(dir, 0755)
@@ -119,7 +177,7 @@ func archiveOVA(fileName string){
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Print("Archiving " + fileName + "at" + dir+fileName + " for safekeeping...")
+	log.Print("Archiving " + fileName + "at" + dir + fileName + " for safekeeping...")
 }
 
 func createConfigShareFolders(fileName string) {
@@ -200,23 +258,22 @@ func createConfigShareFolders(fileName string) {
 	}
 }
 func getMixers() {
-		yamlFile, err := ioutil.ReadFile("config.yaml")
-		if err != nil {
-			log.Printf("yamlFile.Get err   #%v ", err)
-		}
-		log.Print("Reading config.yaml...")
-		err = yaml.Unmarshal(yamlFile, &mixers)
-		if err != nil {
-			log.Fatalf("Unmarshal: %v", err)
-		}
-		log.Print("Successfully read configuration file")
+	yamlFile, err := ioutil.ReadFile("config.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	log.Print("Reading config.yaml...")
+	err = yaml.Unmarshal(yamlFile, &mixers)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+	log.Print("Successfully read configuration file")
 }
-
 
 func main() {
 	log.Print("MXGUI-bootstrapper is starting")
 	getMixers()
-	for _, mixer := range mixers.Mixers{
+	for _, mixer := range mixers.Mixers {
 		switch mixer.Type {
 		case "MC2_96":
 			mc96Mixers = append(mc96Mixers, mixer)
@@ -225,10 +282,11 @@ func main() {
 		case "MC2_36":
 			mc36Mixers = append(mc36Mixers, mixer)
 		}
-		//testConnection(mixer)
 		createUserShareFolders(mixer)
+		go testConnection(mixer)
 	}
 	bootstrapMxGUIVMS()
+	wg.Wait()
 	nepLogo = ` *//*//.                                                            
        ,,,,,//*/*/**%%%%%                                                       
     .,,,,,,, ///*/*%%%%%%%%%                                                    
