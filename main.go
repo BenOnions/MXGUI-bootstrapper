@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/secsy/goftp"
-	"github.com/terra-farm/go-virtualbox"
 	"gopkg.in/yaml.v2"
 )
 
@@ -39,7 +38,15 @@ var (
 )
 
 func vBoxImport(file string) {
-	_ = virtualbox.ImportOV(file)
+	command := "VBoxmanage.exe"
+	args := []string{"import", "--vsys", "0", "--eula", "accept", file}
+	importCommand := exec.Command(command, args...)
+	err := importCommand.Run()
+	if err != nil {
+		log.Fatalf("cmd.Run() import failed with %s\n", err)
+	}
+	//_ = virtualbox.ImportOV(file)
+	//return Manage().run("import --vsys 0 --eula accept", file)
 }
 
 func testConnection(mixer Mixer) {
@@ -118,7 +125,7 @@ func bootstrapMxGUIVMS() {
 		log.Fatal(err)
 	}
 	files, err := f.Readdir(-1)
-	f.Close()
+	_ = f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,15 +143,16 @@ func bootstrapMxGUIVMS() {
 				log.Println(configShareArgs)
 				configShareCMD := exec.Command(command, configShareArgs...)
 				log.Print("Mounting config share folder...")
+				log.Print(command, configShareArgs)
 				userShareCMD := exec.Command(command, userShareArgs...)
 				log.Print("Mounting user share folder...")
 				err = configShareCMD.Run()
 				if err != nil {
-					log.Fatalf("cmd.Run() failed with %s\n", err)
+					log.Fatalf("cmd.Run() config share failed with %s\n", err)
 				}
 				err = userShareCMD.Run()
 				if err != nil {
-					log.Fatalf("cmd.Run() failed with %s\n", err)
+					log.Fatalf("cmd.Run() user share failed with %s\n", err)
 				}
 				archiveOVA(file.Name())
 			}
@@ -184,10 +192,10 @@ func createConfigShareFolders(fileName string) {
 	log.Print("Creating Config Share Folder...")
 	baseDir := "./configShares/" + fileName + "/mxgui_config_share"
 	log.Print("Created " + baseDir)
-	mc56_mk2 := "./configShares/" + fileName + "/mxgui_config_share/mc56_mk2/config"
-	log.Print("Created " + mc56_mk2)
-	mc36_40 := "./configShares/" + fileName + "/mxgui_config_share/mc36_40/config"
-	log.Print("Created " + mc36_40)
+	mc56Mk2 := "./configShares/" + fileName + "/mxgui_config_share/mc56_mk2/config"
+	log.Print("Created " + mc56Mk2)
+	mc3640 := "./configShares/" + fileName + "/mxgui_config_share/mc36_40/config"
+	log.Print("Created " + mc3640)
 	mc96 := "./configShares/" + fileName + "/mxgui_config_share/mc96/config"
 	log.Print("Created " + mc96)
 
@@ -198,16 +206,16 @@ func createConfigShareFolders(fileName string) {
 			log.Fatal(err)
 		}
 	}
-	_, err = os.Stat(mc56_mk2)
+	_, err = os.Stat(mc56Mk2)
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(mc56_mk2, 0755)
+		errDir := os.MkdirAll(mc56Mk2, 0755)
 		if errDir != nil {
 			log.Fatal(err)
 		}
 	}
-	_, err = os.Stat(mc36_40)
+	_, err = os.Stat(mc3640)
 	if os.IsNotExist(err) {
-		errDir := os.MkdirAll(mc36_40, 0755)
+		errDir := os.MkdirAll(mc3640, 0755)
 		if errDir != nil {
 			log.Fatal(err)
 		}
@@ -229,7 +237,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		f.Close()
+		_ = f.Close()
 		log.Print("Bootstrapping mc96 gui_hosts.tcl...")
 	}
 	for _, mixer := range mc56Mixers {
@@ -241,7 +249,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		f.Close()
+		_ = f.Close()
 		log.Print("Bootstrapping mc56 gui_hosts.tcl...")
 	}
 	for _, mixer := range mc36Mixers {
@@ -253,7 +261,7 @@ func createConfigShareFolders(fileName string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		f.Close()
+		_ = f.Close()
 		log.Print("Bootstrapping mc36 gui_hosts.tcl...")
 	}
 }
