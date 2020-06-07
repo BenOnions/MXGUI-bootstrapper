@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -36,6 +37,30 @@ var (
 	nepLogo    string
 	wg         = &sync.WaitGroup{}
 )
+
+func copy(src, dst string) error {
+	var err error
+	var srcfd *os.File
+	var dstfd *os.File
+	var srcinfo os.FileInfo
+	if srcfd, err = os.Open(src); err != nil {
+		return err
+	}
+	defer srcfd.Close()
+
+	if dstfd, err = os.Create(dst); err != nil {
+		return err
+	}
+	defer dstfd.Close()
+
+	if _, err = io.Copy(dstfd, srcfd); err != nil {
+		return err
+	}
+	if srcinfo, err = os.Stat(src); err != nil {
+		return err
+	}
+	return os.Chmod(dst, srcinfo.Mode())
+}
 
 func vBoxImport(file string) {
 	command := "VBoxmanage.exe"
@@ -115,7 +140,30 @@ func backupFiles(mixer Mixer) {
 		}
 
 	}
-
+	//files, err = client.ReadDir("/data/.production")
+	//for _, file := range files {
+	//	fmt.Println("Downloading " + file.Name() + "...")
+	//	if filepath.Ext(file.Name()) == ".snap" {
+	//		targetDir := "./mxgui_user_share/" + mixer.Name + "/activeProduction/"
+	//		_, err := os.Stat(targetDir)
+	//		if os.IsNotExist(err) {
+	//			errDir := os.MkdirAll(targetDir, 0755)
+	//			if errDir != nil {
+	//				log.Fatal(err)
+	//			}
+	//		}
+	//		newFile, err := os.Create(targetDir + file.Name())
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//		log.Print("creating " + file.Name())
+	//		err = client.Retrieve("/data/.productions/"+file.Name(), newFile)
+	//		if err != nil {
+	//			panic(err)
+	//		}
+	//	}
+	//
+	//}
 }
 
 func bootstrapMxGUIVMS() {
@@ -192,11 +240,11 @@ func createConfigShareFolders(fileName string) {
 	log.Print("Creating Config Share Folder...")
 	baseDir := "./configShares/" + fileName + "/mxgui_config_share"
 	log.Print("Created " + baseDir)
-	mc56Mk2 := "./configShares/" + fileName + "/mxgui_config_share/mc56_mk2/config"
+	mc56Mk2 := "./configShares/" + fileName + "/mxgui_config_share/mc56_mk2/config/bayserver_config/mxGUI/"
 	log.Print("Created " + mc56Mk2)
-	mc3640 := "./configShares/" + fileName + "/mxgui_config_share/mc36_40/config"
+	mc3640 := "./configShares/" + fileName + "/mxgui_config_share/mc36_40/config/bayserver_config/mxGUI/"
 	log.Print("Created " + mc3640)
-	mc96 := "./configShares/" + fileName + "/mxgui_config_share/mc96/config"
+	mc96 := "./configShares/" + fileName + "/mxgui_config_share/mc96/config/bayserver_config/mxGUI/"
 	log.Print("Created " + mc96)
 
 	_, err := os.Stat(baseDir)
@@ -212,6 +260,7 @@ func createConfigShareFolders(fileName string) {
 		if errDir != nil {
 			log.Fatal(err)
 		}
+		copy("mcx_gui_global.tcl", mc56Mk2+"mcx_gui_global.tcl")
 	}
 	_, err = os.Stat(mc3640)
 	if os.IsNotExist(err) {
@@ -219,6 +268,8 @@ func createConfigShareFolders(fileName string) {
 		if errDir != nil {
 			log.Fatal(err)
 		}
+		copy("mcx_gui_global.tcl", mc3640+"mcx_gui_global.tcl")
+
 	}
 	_, err = os.Stat(mc96)
 	if os.IsNotExist(err) {
@@ -226,6 +277,7 @@ func createConfigShareFolders(fileName string) {
 		if errDir != nil {
 			log.Fatal(err)
 		}
+		copy("mcx_gui_global.tcl", mc96+"mcx_gui_global.tcl")
 	}
 
 	for _, mixer := range mc96Mixers {
@@ -264,6 +316,7 @@ func createConfigShareFolders(fileName string) {
 		_ = f.Close()
 		log.Print("Bootstrapping mc36 gui_hosts.tcl...")
 	}
+
 }
 func getMixers() {
 	yamlFile, err := ioutil.ReadFile("config.yaml")
