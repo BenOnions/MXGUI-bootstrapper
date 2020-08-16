@@ -306,8 +306,7 @@ func getMixers() {
 	log.Print("Successfully read configuration file")
 }
 
-func main() {
-	
+func main() {	
 	log.Print("MXGUI-bootstrapper is starting")
 	getMixers()
 	for _, mixer := range mixers.Mixers {
@@ -338,4 +337,7 @@ func main() {
       (((( ######( @@@    @@@@@@                @@@&                            
          .#######( @@@     @@@@@   @@@@@@@@@@   @@@&     `
 	log.Print(nepLogo)
+	log.Print("
+
+	Project Maintainer: Ben Onions, Email:bonions@nepgroup.com")
 }
