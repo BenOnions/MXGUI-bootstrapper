@@ -43,7 +43,7 @@ Mixers:
         main: "10.109.1.201"
         backup: "10.109.1.202"
         type: "MC2_56_MKii"
-        name: "HD9"
+        name: "HD09"
   -
         main: "192.168.101.109"
         backup: "192.168.101.110"
