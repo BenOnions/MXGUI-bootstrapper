@@ -63,7 +63,7 @@ func copy(src, dst string) error {
 }
 
 func vBoxImport(file string) {
-	command := "VBoxmanage.exe"
+	command := "C:\\Program Files\\Oracle\\VirtualBox\\VBoxmanage.exe"
 	args := []string{"import", "--vsys", "0", "--eula", "accept", file}
 	importCommand := exec.Command(command, args...)
 	err := importCommand.Run()
@@ -135,35 +135,10 @@ func backupFiles(mixer Mixer) {
 				panic(err)
 			}
 
-			// os.Rename("./mxgui_user_share/"+mixer.Name+"/productions/"+file.Name(), "./mxgui_user_share/"+mixer.Name+"/productions/test"+".lpn")
 
 		}
 
 	}
-	//files, err = client.ReadDir("/data/.production")
-	//for _, file := range files {
-	//	fmt.Println("Downloading " + file.Name() + "...")
-	//	if filepath.Ext(file.Name()) == ".snap" {
-	//		targetDir := "./mxgui_user_share/" + mixer.Name + "/activeProduction/"
-	//		_, err := os.Stat(targetDir)
-	//		if os.IsNotExist(err) {
-	//			errDir := os.MkdirAll(targetDir, 0755)
-	//			if errDir != nil {
-	//				log.Fatal(err)
-	//			}
-	//		}
-	//		newFile, err := os.Create(targetDir + file.Name())
-	//		if err != nil {
-	//			panic(err)
-	//		}
-	//		log.Print("creating " + file.Name())
-	//		err = client.Retrieve("/data/.productions/"+file.Name(), newFile)
-	//		if err != nil {
-	//			panic(err)
-	//		}
-	//	}
-	//
-	//}
 }
 
 func bootstrapMxGUIVMS() {
@@ -332,6 +307,7 @@ func getMixers() {
 }
 
 func main() {
+	
 	log.Print("MXGUI-bootstrapper is starting")
 	getMixers()
 	for _, mixer := range mixers.Mixers {
