@@ -1,0 +1,91 @@
+Mixers:
+  -
+        main: "192.168.21.109"
+        backup: "192.168.21.110"
+        type: "MC2_56_MKii"
+        name: "IP21"
+  -
+        main: "192.168.22.109"
+        backup: "192.168.22.110"
+        type: "MC2_56_MKii"
+        name: "IP22"
+  -
+        main: "192.168.23.109"
+        backup: "192.168.23.110"
+        type: "MC2_56_MKii"
+        name: "IP23"
+  -
+        main: "192.168.24.109"
+        backup: "192.168.24.110"
+        type: "MC2_56_MKii"
+        name: "IP24"
+  -
+        main: "10.111.8.211"
+        backup: "10.111.8.212"
+        type: "MC2_56_MKii"
+        name: "HD11"
+  -
+        main: "10.112.1.211"
+        backup: "10.112.1.212"
+        type: "MC2_56_MKii"
+        name: "HD12"
+  -
+        main: "10.113.1.211"
+        backup: "10.113.1.212"
+        type: "MC2_56_MKii"
+        name: "HD13"
+  -
+        main: "10.114.1.211"
+        backup: "10.114.1.212"
+        type: "MC2_56_MKii"
+        name: "HD14"
+  -
+        main: "10.109.1.201"
+        backup: "10.109.1.202"
+        type: "MC2_56_MKii"
+        name: "HD9"
+  -
+        main: "192.168.101.109"
+        backup: "192.168.101.110"
+        type: "MC2_96"
+        name: "AHS1"
+  -
+        main: "192.168.102.109"
+        backup: "192.168.102.110"
+        type: "MC2_96"
+        name: "AHS2"
+  -
+        main: "192.168.109.109"
+        backup: "192.168.109.110"
+        type: "MC2_96"
+        name: "AHS3"
+  -
+        main: "192.168.104.109"
+        backup: "192.168.104.110"
+        type: "MC2_96"
+        name: "AHS4"
+  -
+        main: "192.168.201.109"
+        backup: "192.168.201.110"
+        type: "MC2_96"
+        name: "AHM1"
+  -
+        main: "192.168.202.109"
+        backup: "192.168.202.110"
+        type: "MC2_96"
+        name: "AHM2"
+  -
+        main: "192.168.203.109"
+        backup: "192.168.203.109"
+        type: "MC2_96"
+        name: "AHM3"
+  -
+        main: "192.168.205.109"
+        backup: "192.168.205.110"
+        type: "MC2_36"
+        name: "AHM5"
+  -
+        main: "192.168.206.109"
+        backup: "192.168.206.110"
+        type: "MC2_36"
+        name: "AHM6"
